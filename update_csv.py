@@ -15,5 +15,4 @@ with open("banana_data.csv", "w", newline="") as f:
     writer.writerow(["symbol", "value"])
     writer.writerow(["BTC_USD", btc_price])
     writer.writerow(["ETH_USD", eth_price])
-writer.writerow(["BTC_Dominance", round(btc_dominance, 2)])
-
+    writer.writerow(["BTC_Dominance", round(btc_dominance, 2)])
