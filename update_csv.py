@@ -1,32 +1,18 @@
-name: Update Banana Data
+import requests
+import csv
 
-on:
-  schedule:
-    - cron: '0 * * * *'  # co godzinę
-  workflow_dispatch:
+# Pobierz dane z CoinGecko
+prices = requests.get("https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum&vs_currencies=usd").json()
+global_data = requests.get("https://api.coingecko.com/api/v3/global").json()
 
-jobs:
-  update:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repo
-        uses: actions/checkout@v3
+btc_price = prices["bitcoin"]["usd"]
+eth_price = prices["ethereum"]["usd"]
+btc_dominance = global_data["data"]["market_cap_percentage"]["btc"]
 
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.x'
-
-      - name: Install dependencies
-        run: pip install requests
-
-      - name: Run update script
-        run: python update_csv.py
-
-      - name: Commit and push changes
-        run: |
-          git config user.name "github-actions"
-          git config user.email "actions@github.com"
-          git add banana_data.csv
-          git commit -m "Auto-update banana_data.csv"
-          git push
+# Zapisz dane do banana_data.csv
+with open("banana_data.csv", "w", newline="") as f:
+    writer = csv.writer(f)
+    writer.writerow(["symbol", "value"])
+    writer.writerow(["BTC_USD", btc_price])
+    writer.writerow(["ETH_USD", eth_price])
+    writer.writerow(["BTC_Dominance", round(btc_dominance, 2)]
