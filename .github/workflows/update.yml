@@ -20,11 +20,12 @@ jobs:
       - name: Install dependencies
         run: pip install requests
 
-      - name: Run update script
+      - name: Run update script (CoinGecko)
         run: python update_csv.py
-        
-      - name: Update DEX volume delta
+
+      - name: Run update script (DEX volume)
         run: python dex_volume_update.py
+
 
       - name: Commit and push changes
         run: |
