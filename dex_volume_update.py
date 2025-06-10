@@ -1,40 +1,40 @@
 import requests
 import csv
-from datetime import datetime, timedelta
 
-# Oblicz daty
-today = datetime.utcnow().date()
-yesterday = today - timedelta(days=1)
-
-# Pobierz dane z DefiLlama API (wolumen DEX)
+# Pobierz dane z DefiLlama
 url = "https://api.llama.fi/overview/dexs?excludeTotalDataChart=true&excludeTotalDataChartBreakdown=true"
 response = requests.get(url)
 data = response.json()
 
-# Wyciągnij wolumen DEX dla dzisiaj i wczoraj
+# Oblicz wolumen i zmianę
 try:
     today_volume = data['total24h']
     yesterday_volume = data['total48h'] - today_volume
     delta = (today_volume - yesterday_volume) / yesterday_volume
+    delta = round(delta, 4)
 except Exception:
-    delta = 0.0  # fallback w razie błędu
+    delta = 0.0
 
-# Dopisz/aktualizuj dane do pliku CSV
+# Wczytaj istniejący plik CSV i zaktualizuj dane
 rows = []
-with open("banana_data.csv", "r") as f:
-    reader = csv.reader(f)
-    rows = list(reader)
+symbols = {}
 
-# Nadpisz lub dopisz wiersz z DEX_VOL_DELTA
-updated = False
-for row in rows:
-    if row[0] == "DEX_VOL_DELTA":
-        row[1] = round(delta, 4)
-        updated = True
-if not updated:
-    rows.append(["DEX_VOL_DELTA", round(delta, 4)])
+try:
+    with open("banana_data.csv", "r") as f:
+        reader = csv.reader(f)
+        header = next(reader)
+        for row in reader:
+            if len(row) == 2:
+                symbols[row[0]] = row[1]
+except FileNotFoundError:
+    header = ["symbol", "value"]
 
-# Zapisz zaktualizowany plik
+# Zaktualizuj lub dodaj DEX_VOL_DELTA
+symbols["DEX_VOL_DELTA"] = delta
+
+# Zapisz cały plik ponownie
 with open("banana_data.csv", "w", newline="") as f:
     writer = csv.writer(f)
-    writer.writerows(rows)
+    writer.writerow(header)
+    for key, value in symbols.items():
+        writer.writerow([key, value])
